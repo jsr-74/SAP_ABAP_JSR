@@ -1,0 +1,12 @@
+*&---------------------------------------------------------------------*
+*& Module Pool       YJSR_COLLEGE_REG_GET_DETAILS
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+PROGRAM YJSR_COLLEGE_REG_GET_DETAILS MESSAGE-ID  ZJSR_MSG.
+
+include zjsr_declarations_top.
+include zjsr_all_status.
+include zjsr_user_command_pai.

@@ -1,0 +1,870 @@
+*&---------------------------------------------------------------------*
+*& Module Pool       YJSR_COLLEGE_REG_GET_DETAILS
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+PROGRAM YJSR_COLLEGE_REG_GET_DETAILS MESSAGE-ID  ZJSR_MSG.
+
+
+*--------------STRUCTURE & INTERNAL TABLES & WORK AREAS FOR STUDENT DETAILS----------
+*STRUCTURE
+DATA: BEGIN OF ZSTUDENTS,
+        SID      TYPE ZSTUDENTS-SID,
+        NAME     TYPE ZSTUDENTS-NAME,
+        BRANCH   TYPE ZSTUDENTS-BRANCH,
+        SYEAR    TYPE ZSTUDENTS-SYEAR,
+        DOB      TYPE ZSTUDENTS-DOB,
+        MOBILE   TYPE ZSTUDENTS-MOBILE,
+        EMAIL    TYPE ZSTUDENTS-EMAIL,
+        ADDRESS  TYPE ZSTUDENTS-ADDRESS,
+        CITY     TYPE ZSTUDENTS-CITY,
+        STATE    TYPE ZSTUDENTS-STATE,
+        PINCODE  TYPE ZSTUDENTS-PINCODE,
+        JOINDATE TYPE ZSTUDENTS-JOINDATE,
+        FEE      TYPE ZSTUDENTS-FEE,
+        CURKY    TYPE ZSTUDENTS-CURKY,
+      END OF ZSTUDENTS.
+*WORK AREAS
+DATA : WA_ST_SCREEN TYPE ZSTUDENTS,
+      WA_ST_PROG TYPE ZSTUDENTS. "OUTPUT
+*INTERNAL TABLE
+DATA : IT_STUDENT TYPE TABLE OF ZSTUDENTS.
+
+
+*--------------------------END STUDENT RELATED DECLARATIONS------------
+*
+*--------------STRUCTURE & INTERNAL TABLES & WORK AREAS FOR FACULTY DETAILS----------
+*STRUCTURE
+
+DATA: BEGIN OF ZFACULTYS,
+        FID TYPE ZFACULTYS-FID,
+        NAME TYPE ZFACULTYS-NAME,
+        SUBJECT TYPE ZFACULTYS-SUBJECT,
+        QUALIFICATION TYPE ZFACULTYS-QUALIFICATION,
+        DOB TYPE ZFACULTYS-DOB,
+        MOBILE TYPE ZFACULTYS-MOBILE,
+        EMAIL TYPE ZFACULTYS-EMAIL,
+        ADDRESS TYPE ZFACULTYS-ADDRESS,
+        CITY TYPE ZFACULTYS-CITY,
+        STATE TYPE ZFACULTYS-STATE,
+        PINCODE TYPE ZFACULTYS-PINCODE,
+        JOINDATE TYPE ZFACULTYS-JOINDATE,
+        SALARY TYPE ZFACULTYS-SALARY,
+      END OF ZFACULTYS.
+
+*WORK AREAS
+
+DATA : WA_FAC_SCREEN TYPE ZFACULTYS,
+      WA_FAC_PROG TYPE ZFACULTYS.
+
+
+*INTERNAL TABLES
+DATA : IT_FAC TYPE TABLE OF ZFACULTYS.
+
+*--------------------------END FACULTY RELATED DECLARATIONS------------
+
+
+*--------------STRUCTURE & INTERNAL TABLES & WORK AREAS FOR NON-FACULTY DETAILS----------
+*STRUCTURE
+
+DATA: BEGIN OF ZNON_FACULTYS,
+        NFID TYPE ZNON_FACULTYS-NFID,
+        NAME TYPE ZNON_FACULTYS-NAME,
+        WORK_TYPE TYPE ZNON_FACULTYS-WORK_TYPE,
+        QUALIFICATION TYPE ZNON_FACULTYS-QUALIFICATION,
+        DOB TYPE ZNON_FACULTYS-DOB,
+        MOBILE TYPE ZNON_FACULTYS-MOBILE,
+        EMAIL TYPE ZNON_FACULTYS-EMAIL,
+        ADDRESS TYPE ZNON_FACULTYS-ADDRESS,
+        CITY TYPE ZNON_FACULTYS-CITY,
+        STATE TYPE ZNON_FACULTYS-STATE,
+        PINCODE TYPE ZNON_FACULTYS-PINCODE,
+        JOINDATE TYPE ZNON_FACULTYS-JOINDATE,
+        SALARY TYPE ZNON_FACULTYS-SALARY,
+      END OF ZNON_FACULTYS.
+
+*WORK AREAS
+DATA : WA_NFAC_SCREEN TYPE ZNON_FACULTYS,
+       WA_NFAC_PROG TYPE ZNON_FACULTYS.
+
+*INTERNAL TABLES
+DATA : IT_NFAC TYPE TABLE OF ZNON_FACULTYS.
+
+
+*--------------------------END NON FACULTY RELATED DECLARATIONS------------
+
+
+*--------------STRUCTURE & INTERNAL TABLES & WORK AREAS FOR WORKERS DETAILS----------
+*STRUCTURE
+
+DATA: BEGIN OF ZWORKERSS,
+        WID TYPE ZWORKERSS-WID,
+        NAME TYPE ZWORKERSS-NAME,
+        QUALIFICATION TYPE ZWORKERSS-QUALIFICATION,
+        WORK_TYPE TYPE ZWORKERSS-WORK_TYPE,
+        DOB TYPE ZWORKERSS-DOB,
+        MOBILE TYPE ZWORKERSS-MOBILE,
+        EMAIL TYPE ZWORKERSS-EMAIL,
+        ADDRESS TYPE ZWORKERSS-ADDRESS,
+        CITY TYPE ZWORKERSS-CITY,
+        STATE TYPE ZWORKERSS-STATE,
+        PINCODE TYPE ZWORKERSS-PINCODE,
+        JOINDATE TYPE ZWORKERSS-JOINDATE,
+        SALARY TYPE ZWORKERSS-SALARY,
+      END OF ZWORKERSS.
+
+*WORK AREAS
+DATA : WA_WORK_SCREEN TYPE ZWORKERSS,
+      WA_WORK_PROG TYPE ZWORKERSS.
+*INTERNAL TABLES
+DATA : IT_WORK TYPE TABLE OF ZWORKERSS.
+
+*--------------------------END WORKERS RELATED DECLARATIONS------------
+
+*------------USER RELATED DECLARATIONS-------
+*STRUCTURE
+     DATA: BEGIN OF ZUSERS,
+             USERNAME TYPE ZUSERS-USERNAME,
+             PASSWORD TYPE ZUSERS-PASSWORD,
+             RE_PSWD TYPE ZUSERS-RE_PSWD,
+             AC_TYPE TYPE ZUSERS-AC_TYPE,
+             U_ID TYPE ZUSERS-U_ID,
+           END OF ZUSERS.
+
+*WORK AREAS & INTERNAL TABLES
+DATA : IT_USER TYPE TABLE OF ZUSERS,
+      WA_USER TYPE ZUSERS.
+
+*WE GET THE SCREEN INPUT VALUES INTO THESE VARIABLES  FROM SCREEN 8000
+DATA : USER TYPE ZUSERS-USERNAME,
+      PASS TYPE ZUSERS-PASSWORD.
+
+
+*WE GET THE SCREEN INPUT VALUES INTO THESE VARIABLES  FROM SCREEN 8100
+DATA : C_USER TYPE ZUSERS-USERNAME,
+      C_PASS TYPE  ZUSERS-PASSWORD,
+        RE_PASS TYPE ZUSERS-RE_PSWD,
+        AC_TYPE TYPE ZUSERS-AC_TYPE.
+*CHECK BOX VARIACLE ON SCREEN
+DATA : SHOW TYPE C.
+
+*--------- DISPLAY MESSAGES ON OUTPUT FIELD---------
+DATA : LOG_FAIL TYPE STRING,
+      C_8100 TYPE STRING,
+      M_8100 TYPE STRING,
+       M_8101 TYPE STRING,
+       M_8102 TYPE STRING,
+       M_8103 TYPE STRING,
+       M_8104 TYPE STRING.
+*-----------------------------------------------
+
+*----------SEARCH FOR STUDENT RELATED DECLARATIONS WITH SUB SCREEN--------------
+DATA : D_SID TYPE ZSID,
+      D_FID TYPE ZFID,
+      D_NFID TYPE ZNFID,
+      D_WID TYPE ZWID,
+      JSR_SCR8002 LIKE SY-DYNNR,
+      JSR_SCR8004 LIKE SY-DYNNR,
+      JSR_SCR8007 LIKE SY-DYNNR,
+      JSR_SCR8020 LIKE SY-DYNNR,
+      JSR_8002 TYPE STRING,
+      JSR_8004 TYPE STRING,
+      JSR_8007 TYPE STRING,
+      JSR_8020 TYPE STRING.
+
+DATA : UPID TYPE ZSID.
+*-----------------------------------
+*----------TABLE CONTROLS DECLARATIONS-------
+CONTROLS : JSR_STU TYPE TABLEVIEW USING SCREEN 8003,
+ JSR_FACT TYPE TABLEVIEW USING SCREEN 8006,
+ JSR_NFAC TYPE TABLEVIEW USING SCREEN 8010,
+            JSR_WORK1 TYPE TABLEVIEW USING SCREEN 8023.
+*---------------------------------------------------
+
+*---------------FORGOT USERNAME AND PASSWORD-------------
+DATA : FG_ID TYPE ZSID,
+      FG_USER TYPE ZUSERS-USERNAME,
+      FG_PASS TYPE  ZUSERS-PASSWORD.
+
+data : rad1,rad2,rad3. "hiding fields based on the radio buttons
+*---------------------------------------------------------
+
+START-OF-SELECTION.
+CALL SCREEN 8000.
+
+
+*&---------------------------------------------------------------------*
+*&  Include           ZJSR_ALL_STATUS
+*&---------------------------------------------------------------------*
+**----all screens pbo  modules here---------
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_8000  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE STATUS_8000 OUTPUT.
+  SET PF-STATUS 'ZJS1'.
+  SET TITLEBAR 'T1'.
+ENDMODULE.
+
+*---------------------------------------------------------*
+*&      Module  MODIFY_SCREEN  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE MODIfy_SCREEN_8000 OUTPUT.
+   LOOP AT SCREEN.
+  CHECK screen-NAME = 'PASS'.
+    SCREEN-INVISIBLE = '1'.
+IF SHOW = 'X'.
+  CHECK screen-NAME = 'PASS'.
+    SCREEN-INVISIBLE = '0'.
+    ENDIF.
+    MODIFY SCREEN.
+    ENDLOOP.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_8100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE STATUS_8100 OUTPUT.
+  SET PF-STATUS 'ZJS1'.
+  SET TITLEBAR 'T2'.
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  SHOW_PASS_8100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE SHOW_PASS_8100 OUTPUT.
+  LOOP AT SCREEN.
+    IF SCREEN-NAME = 'C_PASS' OR SCREEN-NAME = 'RE_PASS'.
+      SCREEN-INVISIBLE  = '1'.
+      ENDIF.
+
+IF SHOW = 'X'.
+  IF SCREEN-NAME = 'C_PASS' OR SCREEN-NAME = 'RE_PASS'.
+      SCREEN-INVISIBLE  = '0'.
+
+      ENDIF.
+      ENDIF.
+  MODIFY SCREEN.
+    ENDLOOP.
+
+
+ENDMODULE.
+
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_8101  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE STATUS_8101 OUTPUT.
+  SET PF-STATUS 'ZJS1'.
+  SET TITLEBAR 'T3'.
+ENDMODULE.
+
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_8102  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE STATUS_8102 OUTPUT.
+  SET PF-STATUS 'ZJS1'.
+  SET TITLEBAR 'T4'.
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_8103  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE STATUS_8103 OUTPUT.
+  SET PF-STATUS 'ZJS1'.
+  SET TITLEBAR 'T5'.
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_8104  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE STATUS_8104 OUTPUT.
+  SET PF-STATUS 'ZJS1'.
+  SET TITLEBAR 'T6'.
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_8001  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE STATUS_8001 OUTPUT.
+  SET PF-STATUS 'ZJS1'.
+  SET TITLEBAR 'T7'.
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_8002  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE STATUS_8002 OUTPUT.
+  SET PF-STATUS 'ZJS1'.
+  SET TITLEBAR 'T8'.
+  IF JSR_8002 IS INITIAL.
+    JSR_SCR8002 = 8022.
+    JSR_8002 = 'JYO'.
+    ENDIF.
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_8004  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE STATUS_8004 OUTPUT.
+  SET PF-STATUS 'ZJS1'.
+  SET TITLEBAR 'T9'.
+
+ IF JSR_8004 IS INITIAL.
+   JSR_SCR8004 = 8005.
+   JSR_8004 = 'JYO'.
+   ENDIF.
+
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_8007  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE STATUS_8007 OUTPUT.
+  SET PF-STATUS 'ZJS1'.
+  SET TITLEBAR 'T10'.
+  IF JSR_8007 IS INITIAL.
+   JSR_SCR8007 = 8009.
+   JSR_8007 = 'JYO'.
+   ENDIF.
+ENDMODULE.
+
+
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_8020  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE STATUS_8020 OUTPUT.
+  SET PF-STATUS 'ZJS1'.
+  SET TITLEBAR 'T11'.
+  IF JSR_8020 IS INITIAL.
+   JSR_SCR8020 = 8021.
+   JSR_8020 = 'JYO'.
+   ENDIF.
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_8011  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE STATUS_8011 OUTPUT.
+  SET PF-STATUS 'ZJS1'.
+  SET TITLEBAR 'T12'.
+
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  MODIFY_8011_SCREN  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE MODIFY_8011_SCREN OUTPUT.
+IF RAD1 IS INITIAL AND RAD2 IS INITIAL AND RAD3 IS INITIAL.
+  RAD1 = 'X'.
+  ENDIF.
+
+if rad1 = 'X'.
+
+  LOOP AT SCREEN.
+
+    IF SCREEN-GROUP1 = 'USB' ."OR  rad2 = 'X'.
+      SCREEN-ACTIVE = '0'.
+      ENDIF.
+      MODIFY SCREEN.
+
+  ENDLOOP.
+  ELSEif rad2 = 'X'.
+
+  LOOP AT SCREEN.
+
+    IF SCREEN-GROUP1 = 'PSG'.
+      SCREEN-ACTIVE = '0'.
+      ENDIF.
+      MODIFY SCREEN.
+
+  ENDLOOP.
+  ELSEif rad3 = 'X'.
+
+  LOOP AT SCREEN.
+
+    IF SCREEN-GROUP2 = 'U&P'.
+      SCREEN-ACTIVE = '1'.
+      ENDIF.
+      MODIFY SCREEN.
+
+  ENDLOOP.
+  ENDIF.
+ENDMODULE.
+
+
+
+
+
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_8000  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_8000 INPUT.
+CASE SY-UCOMM.
+  WHEN 'LOGIN'.
+    select single USERNAME
+PASSWORD
+RE_PSWD
+AC_TYPE
+U_ID from zusers into wa_user WHERE username = user.
+      IF USER IS INITIAL AND PASS IS INITIAL.
+       MESSAGE I004.
+       ELSEIF USER IS INITIAL.
+        LOG_FAIL = TEXT-000.
+      ELSEIF PASS IS INITIAL.
+        LOG_FAIL = TEXT-007.
+      ELSEIF USER IS NOT  INITIAL AND PASS IS NOT INITIAL.
+             IF USER = WA_USER-USERNAME.
+               IF pass = wa_user-PASSWORD.
+                     MESSAGE S001 WITH USER.
+                  call screen 8001.
+                  ELSE.
+                     LOG_FAIL = text-008.
+                  ENDIF.
+               ELSE .
+                 MESSAGE S002 WITH USER.
+
+               ENDIF.
+
+          endif.
+CLEAR : USER,PASS. "
+WHEN 'CNWA'.
+  CALL SCREEN 8100.
+
+ WHEN 'EXIT'.
+      leave PROGRAM.
+      WHEN 'BACK'.
+        LEAVE PROGRAM.
+WHEN 'FGUP'.
+  CALL SCREEN 8011.
+    ENDCASE.
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_8100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_8100 INPUT.
+
+  CASE SY-UCOMM.
+
+    WHEN 'CHEK'.
+      SELECT SINGLE USERNAME FROM ZUSERS INTO @DATA(U_S) WHERE USERNAME = @C_USER.
+        IF U_S NE C_USER.   "USERS EXIST OR NOT
+          C_8100 = TEXT-001.
+         ELSE.
+           C_8100 = TEXT-002.
+          ENDIF.
+          CLEAR U_S.
+    WHEN 'MACH'.    "PASSWORDS MATCH CHECK
+      IF C_PASS EQ RE_PASS.
+        M_8100 = TEXT-003.
+     ELSE.
+       M_8100 = TEXT-004.
+ENDIF.
+
+WHEN 'HOME'.
+  LEAVE TO SCREEN 8000.
+ WHEN 'SUBT'.
+   IF C_USER IS NOT INITIAL AND C_PASS IS NOT INITIAL AND
+      RE_PASS IS NOT INITIAL AND AC_TYPE IS NOT INITIAL.
+   WA_USER-USERNAME = C_USER.
+   WA_USER-PASSWORD = C_PASS.
+   WA_USER-RE_PSWD = RE_PASS.
+   WA_USER-AC_TYPE = AC_TYPE.
+   IF C_PASS = RE_PASS.
+   INSERT ZUSERS FROM WA_USER. " USER DETAILS STORED
+   ELSE.
+     MESSAGE 'BOTH PASSWORDS ARE NOT MATCHED' TYPE 'E'.
+
+   ENDIF.
+     CLEAR: C_USER, C_PASS,RE_PASS,M_8100,C_8100.
+   IF SY-SUBRC = 0.
+     MESSAGE I005.
+     IF AC_TYPE = 'STU'.
+     MESSAGE I006 WITH 'STUDENT'.
+
+   CALL SCREEN 8101.   "STUDENT REGISTRATION FORM CALLING
+   ELSEIF AC_TYPE = 'TF'.
+      MESSAGE I006 WITH 'FACULTY'.
+
+   CALL SCREEN 8102.        "faculty REGISTRATION FORM CALLING
+   ELSEIF AC_TYPE = 'NTF'.
+      MESSAGE I006 WITH 'NON_FACULTY'..
+
+   CALL SCREEN 8103.          "NON_FACULTY REGISTRATION FORM CALLING
+   ELSEIF AC_TYPE = 'WR'. .
+      MESSAGE I006 WITH 'WORKER'.
+
+   CALL SCREEN 8104.           "WORKER REGISTRATION FORM CALLING
+   ELSE .
+     MESSAGE I008.
+     ENDIF.
+
+  ELSE.
+    MESSAGE I007.
+    endif.
+  ELSE.
+    MESSAGE S009.
+    ENDIF.
+
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 8000.
+
+    ENDCASE.
+
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_8101  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_8101 INPUT.
+CASE SY-UCOMM.
+   WHEN 'CHEK'.
+     SELECT SINGLE SID FROM ZSTUDENT INTO UPID WHERE SID =  WA_ST_SCREEN-SID.
+       IF UPID NE WA_ST_SCREEN-SID.    " CHECK SID EXISTS OR NOT
+         M_8101 = TEXT-005.
+
+         ELSE.
+         M_8101 = TEXT-006.
+         ENDIF.
+         CLEAR :UPID.
+   WHEN 'SAVE'.
+     IF WA_ST_SCREEN-SID IS NOT INITIAL AND WA_ST_SCREEN-NAME IS NOT INITIAL AND
+ WA_ST_SCREEN-BRANCH IS NOT INITIAL AND WA_ST_SCREEN-SYEAR IS NOT INITIAL AND
+WA_ST_SCREEN-DOB IS NOT INITIAL AND WA_ST_SCREEN-MOBILE IS NOT INITIAL AND
+WA_ST_SCREEN-EMAIL IS NOT INITIAL AND WA_ST_SCREEN-ADDRESS  IS NOT INITIAL AND
+WA_ST_SCREEN-CITY IS NOT INITIAL AND WA_ST_SCREEN-STATE IS NOT INITIAL AND
+WA_ST_SCREEN-PINCODE  IS NOT INITIAL AND WA_ST_SCREEN-FEE  IS NOT INITIAL AND
+WA_ST_SCREEN-CURKY IS NOT INITIAL .
+
+        WA_ST_SCREEN-JOINDATE = SY-DATUM.
+     INSERT ZSTUDENT FROM WA_ST_SCREEN.  " STORE DETAILS INTO STUDENT TABLE
+     UPDATE ZUSERS SET U_ID =  WA_ST_SCREEN WHERE USERNAME = WA_USER-USERNAME .
+     CLEAR : WA_ST_SCREEN.
+     MESSAGE I010.
+     ELSE.
+       MESSAGE I009.
+ENDIF.
+CLEAR  M_8101.
+     WHEN 'HOME'.
+       LEAVE TO SCREEN 8000.
+
+WHEN 'BACK'.
+  LEAVE TO SCREEN 8100.
+  ENDCASE.
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_8102  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_8102 INPUT.
+
+  CASE SY-UCOMM.
+
+       WHEN 'CHEK'.
+     SELECT SINGLE FID FROM ZFACULTY INTO UPID WHERE FID =  WA_FAC_SCREEN-FID.
+       IF UPID NE WA_FAC_SCREEN-FID.    " CHECK SID EXISTS OR NOT
+         M_8102 = TEXT-005.
+         ELSE.
+         M_8102 = TEXT-006.
+         ENDIF.
+CLEAR :UPID.
+      WHEN 'SAVE'.
+
+             IF WA_FAC_SCREEN-FID IS NOT INITIAL AND WA_FAC_SCREEN-NAME IS NOT INITIAL AND WA_FAC_SCREEN-SUBJECT IS NOT INITIAL AND
+WA_FAC_SCREEN-QUALIFICATION IS NOT INITIAL AND WA_FAC_SCREEN-DOB  IS NOT INITIAL AND WA_FAC_SCREEN-MOBILE IS NOT INITIAL AND
+WA_FAC_SCREEN-EMAIL IS NOT INITIAL AND WA_FAC_SCREEN-ADDRESS  IS NOT INITIAL AND WA_FAC_SCREEN-CITY IS NOT INITIAL AND
+WA_FAC_SCREEN-STATE IS NOT INITIAL AND WA_FAC_SCREEN-PINCODE  IS NOT INITIAL AND WA_FAC_SCREEN-SALARY  IS NOT INITIAL
+.
+
+
+        WA_FAC_SCREEN-JOINDATE = SY-DATUM.
+        INSERT ZFACULTY FROM WA_FAC_SCREEN.
+         UPDATE ZUSERS SET U_ID =  WA_FAC_SCREEN-FID WHERE USERNAME = WA_USER-USERNAME.
+          CLEAR : WA_FAC_SCREEN.
+MESSAGE I010.
+ ELSE.
+       MESSAGE I009.
+ENDIF.
+CLEAR  M_8102.
+    WHEN 'HOME'.
+      LEAVE TO SCREEN 8000.
+      WHEN 'BACK'.
+        LEAVE TO SCREEN 8100.
+    ENDCASE.
+
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_8103  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_8103 INPUT.
+CASE SY-UCOMM.
+
+  WHEN 'CHEK'.
+     SELECT SINGLE NFID FROM ZNON_FACULTY INTO UPID WHERE NFID =  WA_NFAC_SCREEN-NFID.
+       IF UPID NE WA_NFAC_SCREEN-NFID.    " CHECK SID EXISTS OR NOT
+         M_8103 = TEXT-005.
+         ELSE.
+         M_8103 = TEXT-006.
+         ENDIF.
+
+CLEAR :UPID.
+WHEN 'SAVE'.
+
+
+IF WA_NFAC_SCREEN-NFID IS NOT INITIAL AND WA_NFAC_SCREEN-NAME IS NOT INITIAL AND WA_NFAC_SCREEN-WORK_TYPE IS NOT INITIAL AND
+WA_NFAC_SCREEN-QUALIFICATION IS NOT INITIAL AND WA_NFAC_SCREEN-DOB  IS NOT INITIAL AND WA_NFAC_SCREEN-MOBILE IS NOT INITIAL AND
+WA_NFAC_SCREEN-EMAIL IS NOT INITIAL AND WA_NFAC_SCREEN-ADDRESS  IS NOT INITIAL AND WA_NFAC_SCREEN-CITY IS NOT INITIAL AND
+WA_NFAC_SCREEN-STATE IS NOT INITIAL AND WA_NFAC_SCREEN-PINCODE  IS NOT INITIAL AND WA_NFAC_SCREEN-SALARY  IS NOT INITIAL.
+
+
+  WA_NFAC_SCREEN-JOINDATE = SY-DATUM.
+  INSERT ZNON_FACULTY FROM WA_NFAC_SCREEN.
+    UPDATE ZUSERS SET U_ID =  WA_NFAC_SCREEN-NFID WHERE USERNAME = WA_USER-USERNAME .
+
+ CLEAR : WA_NFAC_SCREEN.
+MESSAGE I010.
+ ELSE.
+       MESSAGE I009.
+ENDIF.
+CLEAR  M_8103.
+WHEN 'HOME'.
+  LEAVE TO SCREEN 8000.
+  when 'BACK'.
+  LEAVE TO SCREEN 8100.
+  ENDCASE.
+
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_8104  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_8104 INPUT.
+CASE SY-UCOMM.
+
+  WHEN 'CHEK'.
+      SELECT SINGLE WID FROM ZWORKERS INTO UPID WHERE WID =  WA_WORK_SCREEN-WID.
+       IF UPID NE WA_WORK_SCREEN-WID.    " CHECK SID EXISTS OR NOT
+         M_8104 = TEXT-005.
+         ELSE.
+         M_8104 = TEXT-006.
+         ENDIF.
+CLEAR :UPID.
+  WHEN 'SAVE'.
+IF WA_WORK_SCREEN-WID IS NOT INITIAL AND WA_WORK_SCREEN-NAME IS NOT INITIAL AND WA_WORK_SCREEN-WORK_TYPE IS NOT INITIAL AND
+WA_WORK_SCREEN-QUALIFICATION IS NOT INITIAL AND WA_WORK_SCREEN-DOB  IS NOT INITIAL AND WA_WORK_SCREEN-MOBILE IS NOT INITIAL AND
+WA_WORK_SCREEN-EMAIL IS NOT INITIAL AND WA_WORK_SCREEN-ADDRESS  IS NOT INITIAL AND WA_WORK_SCREEN-CITY IS NOT INITIAL AND
+WA_WORK_SCREEN-STATE IS NOT INITIAL AND WA_WORK_SCREEN-PINCODE  IS NOT INITIAL AND WA_WORK_SCREEN-SALARY  IS NOT INITIAL.
+
+   WA_WORK_SCREEN-JOINDATE = SY-DATUM.
+    INSERT ZWORKERS FROM WA_WORK_SCREEN.
+    UPDATE ZUSERS SET U_ID = WA_WORK_SCREEN-WID WHERE USERNAME = WA_USER-USERNAME.
+     CLEAR : WA_WORK_SCREEN.
+MESSAGE I010.
+ ELSE.
+       MESSAGE I009.
+ENDIF.
+CLEAR  M_8104.
+    WHEN 'HOME'.
+      LEAVE TO SCREEN 8000.
+      WHEN 'BACK'.
+        LEAVE TO SCREEN 8100.
+  ENDCASE.
+
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_8001  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_8001 INPUT.
+
+  CASE SY-UCOMM.
+    WHEN 'STUD'.
+    CALL SCREEN 8002.
+    WHEN 'FACU'.
+      CALL SCREEN 8004.
+      WHEN 'NFAC'.
+        CALL SCREEN 8007.
+        WHEN 'WORK'.
+          CALL SCREEN 8020.
+
+         WHEN 'HOME'.
+            CLEAR :USER,PASS.
+         LEAVE TO SCREEN 8000.
+
+         WHEN 'LOGOUT'.
+             LEAVE TO SCREEN 8000.
+             MESSAGE I011.
+          WHEN 'BACK'.
+     LEAVE TO SCREEN 8000.
+
+    ENDCASE.
+
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_8002  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_8002 INPUT.
+
+  CASE SY-UCOMM.
+    WHEN 'GET'.
+      CLEAR WA_ST_PROG.
+      SELECT SINGLE * FROM  ZSTUDENT INTO  WA_ST_PROG WHERE SID = WA_ST_SCREEN-SID.
+        JSR_SCR8002 =  8022.
+      CLEAR:  WA_ST_SCREEN-SID.
+
+    WHEN 'GAST'.
+      SELECT * FROM ZSTUDENT INTO TABLE IT_STUDENT.
+        JSR_SCR8002 = 8003.
+WHEN 'BACK'.
+  LEAVE TO SCREEN 8001.
+    ENDCASE.
+
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_8004  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_8004 INPUT.
+
+case sy-ucomm.
+  when 'GET'.
+    CLEAR WA_FAC_PROG.
+    select single * from zfaculty into wa_fac_prog where fid = WA_FAC_SCREEN-FID.
+      jsr_scr8004 = 8005.
+         CLEAR:  WA_FAC_SCREEN-FID.
+     when 'GAFD'.
+       SELECT  * FROM ZFACULTY INTO TABLE it_fac.
+         JSR_SCR8004 = 8006.
+   WHEN 'BACK'.
+     LEAVE TO SCREEN 8001.
+  ENDCASE.
+ENDMODULE.
+
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_8007  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_8007 INPUT.
+CASE SY-UCOMM.
+when 'GET'.
+  CLEAR WA_NFAC_PROG.
+    select single * from zNON_FACULTY into wa_NFAC_prog where NFid = WA_NFAC_SCREEN-NFID.
+      jsr_scr8007 = 8009.
+         CLEAR:  WA_NFAC_SCREEN-NFID.
+     when 'GANFD'.
+       SELECT  * FROM zNON_FACULTY INTO TABLE it_NFAC.
+         JSR_SCR8007 = 8010.
+   WHEN 'BACK'.
+     LEAVE TO SCREEN 8001.
+  ENDCASE.
+
+ENDMODULE.
+
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_8020  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_8020 INPUT.
+CASE SY-UCOMM.
+when 'GET'.
+  CLEAR WA_WORK_PROG.
+    select single * from zWORKERS into wa_WORK_prog where Wid = WA_WORK_SCREEN-WID.
+      jsr_scr8020 = 8021.
+         CLEAR:  WA_WORK_SCREEN-WID.
+     when 'GAWD'.
+       SELECT  * FROM ZWORKERS INTO TABLE it_WORK.
+         JSR_SCR8020 = 8023.
+   WHEN 'BACK'.
+     LEAVE TO SCREEN 8001.
+  ENDCASE.
+
+ENDMODULE.
+
+
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_8011  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE USER_COMMAND_8011 INPUT.
+CASE SY-UCOMM.
+  WHEN 'GET'.
+    CLEAR : FG_USER,FG_PASS.
+    IF RAD1 = 'X'.
+
+    SELECT SINGLE PASSWORD FROM ZUSERS INTO FG_PASS WHERE U_ID = FG_ID.
+
+ ELSEIF RAD2 = 'X'.
+
+    SELECT SINGLE USERNAME FROM ZUSERS INTO FG_USER WHERE U_ID = FG_ID.
+
+ELSEIF RAD3 = 'X'.
+
+    SELECT SINGLE USERNAME,PASSWORD FROM ZUSERS INTO (@FG_USER,@FG_PASS) WHERE U_ID = @FG_ID.
+
+ENDIF.
+
+WHEN 'BACK'.
+  CALL SCREEN 8000.
+
+  ENDCASE.
+
+ENDMODULE.
