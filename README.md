@@ -4,8 +4,8 @@ Currently positioned along with Java, as the main language for SAP application s
 
 Project Development Using SAP ABAP
 Objective of this project is to develop an application for college contains faculty,students,non faculty and workers using ABAP 'Advance Business Application Programming'.
-In this project, faculty,students,non faculty and workers can read the details of facultys,students,non facultys and workers. while the faculty,students,non faculty and workers are only fill their 
-details and read their respective details also read all types of data read every one in the college. All this done by login to an account or by creating new account.
+In this project, faculty,students,non faculty and workers can read the details of facultys,students,non facultys and workers. while the faculty,students,non faculty and workers are  fill their 
+details and read their respective details also read all others  data in the college. All this done by login to an account or by creating new account.
 
 Prerequisites.
 LEARNING SAP ABAP CONCEPTS 
